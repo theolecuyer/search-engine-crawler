@@ -9,14 +9,14 @@ func TestTfIdf(t *testing.T) {
 	testCases := []struct {
 		name      string
 		word      string
-		input     Index
+		input     InvertedIndex
 		documents Frequency
 		expected  hits
 	}{
 		{
 			name: "tfIDFTest1",
 			word: "romeo",
-			input: Index{
+			input: InvertedIndex{
 				"romeo": Frequency{
 					"url2": 4,
 					"url1": 4,
@@ -36,15 +36,15 @@ func TestTfIdf(t *testing.T) {
 				"url10": 330,
 			},
 			expected: hits{
-				searchHit{"url6", 10, 0.05090504065967528},
-				searchHit{"url1", 4, 0.009162907318741552},
-				searchHit{"url2", 4, 0.009162907318741552},
+				searchHit{"url6", 10, 0.05555555555555555},
+				searchHit{"url1", 4, 0.01},
+				searchHit{"url2", 4, 0.01},
 			},
 		},
 		{
 			name: "tfIDFTest2",
 			word: "juliet",
-			input: Index{
+			input: InvertedIndex{
 				"juliet": Frequency{
 					"url3": 5,
 					"url7": 3,
@@ -63,14 +63,14 @@ func TestTfIdf(t *testing.T) {
 				"url10": 330,
 			},
 			expected: hits{
-				searchHit{"url7", 3, 0.01805959206488904},
-				searchHit{"url3", 5, 0.010033106702716134},
+				searchHit{"url7", 3, 0.015},
+				searchHit{"url3", 5, 0.008333333333333333},
 			},
 		},
 		{
 			name: "tfIDFTest3",
 			word: "mercutio",
-			input: Index{
+			input: InvertedIndex{
 				"mercutio": Frequency{
 					"url5": 7,
 				},
@@ -88,13 +88,13 @@ func TestTfIdf(t *testing.T) {
 				"url10": 330,
 			},
 			expected: hits{
-				searchHit{"url5", 7, 0.03755355129012901},
+				searchHit{"url5", 7, 0.023333333333333334},
 			},
 		},
 		{
 			name: "tfIDFTest4",
 			word: "tybalt",
-			input: Index{
+			input: InvertedIndex{
 				"tybalt": Frequency{
 					"url4": 1,
 					"url8": 2,
@@ -114,15 +114,15 @@ func TestTfIdf(t *testing.T) {
 				"url10": 330,
 			},
 			expected: hits{
-				searchHit{"url9", 3, 0.01145363414842694},
-				searchHit{"url8", 2, 0.009645165598675317},
-				searchHit{"url4", 1, 0.0036651629274966203},
+				searchHit{"url9", 3, 0.0125},
+				searchHit{"url8", 2, 0.010526315789473684},
+				searchHit{"url4", 1, 0.004},
 			},
 		},
 		{
 			name: "tfIDFTest5",
 			word: "benvolio",
-			input: Index{
+			input: InvertedIndex{
 				"benvolio": Frequency{},
 			},
 			documents: Frequency{
@@ -143,7 +143,10 @@ func TestTfIdf(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			result := search(test.word, test.input, test.documents)
+			idx := MakeInMemoryIndex()
+			idx.doclen = test.documents
+			idx.wordFreq = test.input
+			result := idx.Search(test.word)
 			if !reflect.DeepEqual(result, test.expected) {
 				t.Errorf("Got: %v\nExpected: %v", result, test.expected)
 			}
