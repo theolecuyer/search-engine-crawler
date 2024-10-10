@@ -89,9 +89,10 @@ func TestCrawl(t *testing.T) {
 				}
 			}))
 			defer svr.Close()
-			got := crawl(svr.URL)
+			idx := MakeInMemoryIndex()
+			crawl(svr.URL, idx)
 			var gotURLS []string
-			for u := range got {
+			for u := range idx.doclen {
 				parsedUrl, err := url.Parse(u)
 				if err != nil {
 					t.Fatalf("Failed to parse URL: %v", err)

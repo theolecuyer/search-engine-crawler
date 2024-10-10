@@ -54,11 +54,10 @@ func TestStop(t *testing.T) {
 			svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(test.input))
 			}))
-			dataWordFreq := make(Index)
-			dataDocLen := make(Frequency)
+			idx := MakeInMemoryIndex()
 			results := make(map[string]struct{})
-			index(svr.URL, dataWordFreq, dataDocLen)
-			for word := range dataWordFreq {
+			crawl(svr.URL, idx)
+			for word := range idx.wordFreq {
 				results[word] = struct{}{}
 			}
 			if !reflect.DeepEqual(results, test.expected) {
