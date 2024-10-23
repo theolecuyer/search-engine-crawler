@@ -7,13 +7,17 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/kljensen/snowball"
 )
 
 func crawl(baseURL string, index Indexes) {
-	allLinksWords := make(map[string][]string) //Return: URL, slice of words
-	visitedUrls := make(map[string]bool)       //Make a map for all visited urls
+	visitedUrls := make(map[string]bool) //Make a map for all visited urls
 	stopWordMap := loadStopWords("stopwords-en.json")
 	host, err := url.Parse(baseURL)
 	if err != nil {
@@ -21,36 +25,64 @@ func crawl(baseURL string, index Indexes) {
 	}
 	visitedUrls[baseURL] = true
 	hostName := host.Host
-	queue := []string{baseURL} //FIFO queue
-
-	for len(queue) > 0 {
-		var currentUrl = queue[0] //Get the top element
-		fmt.Println("Crawling at: " + currentUrl)
-		queue = queue[1:] //"Pop" the top element
-		if result, err := download(currentUrl); err != nil {
-			log.Printf("Download returned: %v\n", err)
-		} else {
-			words, hrefs := extract(string(result))
-			for _, word := range words {
-				if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
-					log.Printf("Snowball error: %v", err)
-				} else {
-					if _, exists := stopWordMap[stemmedWord]; !exists {
-						allLinksWords[currentUrl] = append(allLinksWords[currentUrl], stemmedWord)
+	//Read the robots.txt file if it exists
+	crawlDelay, dissalowList := loadRobots(hostName)
+	chDownload := make(chan string, 100)
+	chExtract := make(chan downloadResults, 100)
+	var mu sync.Mutex     //Make a mutex for the visited map
+	var wg sync.WaitGroup //Waitrgoup to find out when all goroutines have finished
+	chDownload <- baseURL //Add the first url
+	//Start a goroutine to manage all extract/download results
+	go func() {
+		for {
+			select {
+			case currentUrl := <-chDownload:
+				allowed := true
+				for dissalowedPath := range dissalowList {
+					matched, _ := regexp.MatchString(dissalowedPath, currentUrl)
+					if matched {
+						allowed = false
+						break
 					}
 				}
-			}
-
-			links := clean(baseURL, hrefs)
-			for _, cleanedURL := range links {
-				if !visitedUrls[cleanedURL.String()] && hostName == cleanedURL.Host {
-					queue = append(queue, cleanedURL.String())
-					visitedUrls[cleanedURL.String()] = true
+				if allowed {
+					wg.Add(1)
+					go download(currentUrl, chExtract, &wg)
+					time.Sleep(time.Duration(crawlDelay) * time.Second)
 				}
+			case content := <-chExtract:
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					words, hrefs := extract(content.data)
+					currentWords := []string{}
+					for _, word := range words {
+						if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
+							log.Printf("Snowball error: %v", err)
+						} else {
+							if _, exists := stopWordMap[stemmedWord]; !exists {
+								currentWords = append(currentWords, stemmedWord)
+							}
+						}
+					}
+					links := clean(baseURL, hrefs)
+					for _, cleanedURL := range links {
+						mu.Lock()
+						if !visitedUrls[cleanedURL.String()] && hostName == cleanedURL.Host {
+							chDownload <- cleanedURL.String()
+							visitedUrls[cleanedURL.String()] = true
+						}
+						mu.Unlock()
+					}
+					index.AddToIndex(content.url, currentWords)
+				}()
 			}
 		}
-	}
-	index.AddToIndex(allLinksWords)
+	}()
+	//Wait for intial goroutines to spin up and call others
+	time.Sleep(10 * time.Second)
+	wg.Wait()
+	fmt.Printf("All goroutines finished")
 }
 
 func loadStopWords(link string) map[string]struct{} {
@@ -69,4 +101,38 @@ func loadStopWords(link string) map[string]struct{} {
 		stopWordMap[word] = struct{}{}
 	}
 	return stopWordMap
+}
+
+func loadRobots(hostName string) (float64, map[string]bool) {
+	var crawlDelay float64 = 0.1
+	robotsUrl := "http://" + hostName + "/top10/robots.txt"
+	dissalowList := make(map[string]bool)
+	if res, err := downloadRobots(robotsUrl); err != nil {
+		log.Println("No robots file found, continuing standard crawling")
+	} else {
+		lines := strings.Split(res, "\n")
+		currUser := false
+		for i := range lines {
+			if strings.HasPrefix(lines[i], "User-agent:") {
+				if strings.HasPrefix(lines[i], "User-agent: *") {
+					currUser = true
+				} else {
+					currUser = false
+				}
+			} else if currUser && strings.HasPrefix(lines[i], "Disallow:") {
+				filePath := strings.TrimSpace(strings.TrimPrefix(lines[i], "Disallow:"))
+				dissalowed := strings.ReplaceAll(filePath, "*", ".*")
+				dissalowList[dissalowed] = false
+			} else if strings.HasPrefix(lines[i], "Crawl-delay:") {
+				delay := strings.TrimSpace(strings.TrimPrefix(lines[i], "Crawl-delay:"))
+				i, err := strconv.ParseFloat(delay, 64)
+				if err != nil {
+					log.Println("robots.txt crawl delay incorrectly formatted")
+				} else {
+					crawlDelay = float64(i)
+				}
+			}
+		}
+	}
+	return crawlDelay, dissalowList
 }

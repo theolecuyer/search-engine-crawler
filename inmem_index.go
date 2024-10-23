@@ -3,34 +3,40 @@ package main
 import (
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/kljensen/snowball"
 )
 
 type Indexes interface {
-	AddToIndex(allWords map[string][]string)
+	AddToIndex(url string, currWords []string)
 	Search(query string) hits
 }
+
+// Types used for inmem index
+type Frequency map[string]int           //Maps links to their word frequency
+type InvertedIndex map[string]Frequency //Maps each word and their correpsonding links and frequencies
 
 type InMemoryIndex struct {
 	wordFreq InvertedIndex
 	doclen   Frequency
+	mu       sync.Mutex
 }
 
 func MakeInMemoryIndex() *InMemoryIndex {
 	return &InMemoryIndex{wordFreq: make(InvertedIndex), doclen: make(Frequency)}
 }
 
-func (i *InMemoryIndex) AddToIndex(allWords map[string][]string) {
-	for url, words := range allWords {
-		for _, word := range words {
-			if i.wordFreq[word] == nil {
-				i.wordFreq[word] = make(Frequency)
-			}
-			i.wordFreq[word][url]++
+func (i *InMemoryIndex) AddToIndex(url string, currWords []string) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	for _, word := range currWords {
+		if i.wordFreq[word] == nil {
+			i.wordFreq[word] = make(Frequency)
 		}
-		i.doclen[url] = len(words)
+		i.wordFreq[word][url]++
 	}
+	i.doclen[url] = len(currWords)
 }
 
 func (i *InMemoryIndex) Search(query string) hits {

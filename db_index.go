@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/kljensen/snowball"
 	_ "modernc.org/sqlite"
@@ -19,6 +20,7 @@ type DatabaseIndex struct {
 	getURLStmt          *sql.Stmt
 	getURLWordCountStmt *sql.Stmt
 	getWordFreqStmt     *sql.Stmt
+	mu                  sync.Mutex
 }
 
 func MakeDBIndex(db *sql.DB) *DatabaseIndex {
@@ -26,10 +28,10 @@ func MakeDBIndex(db *sql.DB) *DatabaseIndex {
 	if err != nil {
 		log.Printf("Foreign key error: %v\n", err)
 	}
-	_, err = db.Exec("PRAGMA journal_mode = WAL;")
-	if err != nil {
-		log.Fatalf("Failed to set WAL mode: %v", err)
-	}
+	// _, err = db.Exec("PRAGMA journal_mode = WAL;")
+	// if err != nil {
+	// 	log.Fatalf("Failed to set WAL mode: %v", err)
+	// }
 	tables := []string{
 		`CREATE TABLE IF NOT EXISTS urls(
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,55 +71,56 @@ func MakeDBIndex(db *sql.DB) *DatabaseIndex {
 	}
 }
 
-func (d *DatabaseIndex) AddToIndex(allWords map[string][]string) {
+func (d *DatabaseIndex) AddToIndex(url string, currWords []string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	//Use transactions to batch apply queries to the db
 	tx, err := d.db.Begin()
 	if err != nil {
 		log.Printf("Tx returned: %v\n", err)
 	}
-	for url, words := range allWords {
-		fmt.Printf("Indexing DB at: %s\n", url)
-		res, err := tx.Stmt(d.insertURLStmt).Exec(url, len(words))
+	fmt.Printf("Indexing DB at: %s\n", url)
+	res, err := tx.Stmt(d.insertURLStmt).Exec(url, len(currWords))
+	if err != nil {
+		log.Printf("URL insert returned %v\n", err)
+		tx.Rollback()
+	}
+	urlID, err := res.LastInsertId()
+	if err != nil {
+		log.Printf("URL last insert returned %v\n", err)
+	}
+	for _, word := range currWords {
+		var wordID int64
+		res, err := tx.Stmt(d.insertWordStmt).Exec(word)
 		if err != nil {
-			log.Printf("URL insert returned %v\n", err)
+			log.Printf("word insert returned %v\n", err)
 			tx.Rollback()
 		}
-		urlID, err := res.LastInsertId()
+		num, err := res.RowsAffected()
 		if err != nil {
-			log.Printf("URL last insert returned %v\n", err)
+			log.Printf("Rows affected returned %v\n", err)
+			tx.Rollback()
 		}
-		for _, word := range words {
-			var wordID int64
-			res, err := tx.Stmt(d.insertWordStmt).Exec(word)
+		if num != 0 {
+			wordID, err = res.LastInsertId()
 			if err != nil {
-				log.Printf("word insert returned %v\n", err)
+				log.Printf("URL insert returned %v\n", err)
 				tx.Rollback()
 			}
-			num, err := res.RowsAffected()
+		} else {
+			err := tx.Stmt(d.getWordIDStmt).QueryRow(word).Scan(&wordID)
 			if err != nil {
-				log.Printf("Rows affected returned %v\n", err)
+				log.Printf("Get word ID returned %v\n", err)
 				tx.Rollback()
 			}
-			if num != 0 {
-				wordID, err = res.LastInsertId()
-				if err != nil {
-					log.Printf("URL insert returned %v\n", err)
-					tx.Rollback()
-				}
-			} else {
-				err := tx.Stmt(d.getWordIDStmt).QueryRow(word).Scan(&wordID)
-				if err != nil {
-					log.Printf("Get word ID returned %v\n", err)
-					tx.Rollback()
-				}
-			}
-			_, err = tx.Stmt(d.insertFreqStmt).Exec(wordID, urlID)
-			if err != nil {
-				log.Printf("Insert freq returned %v\n", err)
-				tx.Rollback()
-			}
+		}
+		_, err = tx.Stmt(d.insertFreqStmt).Exec(wordID, urlID)
+		if err != nil {
+			log.Printf("Insert freq returned %v\n", err)
+			tx.Rollback()
 		}
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Printf("tx commit returned %v\n", err)

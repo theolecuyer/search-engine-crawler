@@ -3,16 +3,24 @@ package main
 import (
 	"log"
 	"net/url"
+	"strings"
 )
 
 func clean(host string, hrefs []string) []*url.URL {
 	var cleaned []*url.URL
 	u, err := url.Parse(host)
 	if err != nil {
-		log.Fatalf("url.Parse returned %v\n", err)
+		log.Fatalf("url.Parse 1 returned %v\n", err)
 	}
-	for i := range hrefs {
-		hr, err := url.Parse(hrefs[i])
+	for _, href := range hrefs {
+		if host != "http://localhost:8080" {
+			href = strings.ReplaceAll(href, " ", "")
+			href = strings.ReplaceAll(href, "\n", "")
+		}
+		href = strings.TrimLeft(href, " ")
+		href = strings.ReplaceAll(href, " ", "%20")
+		href = strings.ReplaceAll(href, "%&", "%25&")
+		hr, err := url.Parse(href)
 		if err != nil {
 			log.Fatalf("url.Parse returned %v\n", err)
 		}

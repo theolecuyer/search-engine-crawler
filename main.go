@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-// Type used across all files
-type Frequency map[string]int           //Maps links to their word frequency
-type InvertedIndex map[string]Frequency //Maps each word and their correpsonding links and frequencies
-
 func main() {
 	indexType := flag.String("index", "", "Specify the index type")
 	flag.Parse()
@@ -28,9 +24,7 @@ func main() {
 		indx = MakeDBIndex(db)
 		go webserver(indx)
 	}
-
-	crawl("http://localhost:8080/top10/index.html", indx)
-	//crawl("https://cs272-f24.github.io/tests/rnj/", indx)
+	crawl("https://gihthub.com", indx)
 
 	for {
 		//Run the server until manual exit

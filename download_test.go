@@ -44,7 +44,7 @@ func TestDownload(t *testing.T) {
 			svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(test.expected))
 			}))
-			got, _ := download(svr.URL)
+			got, _ := downloadRobots(svr.URL)
 			if !reflect.DeepEqual(got, test.expected) {
 				t.Errorf("\nGot: %v\nExpected: %v\n", got, test.expected)
 			}
