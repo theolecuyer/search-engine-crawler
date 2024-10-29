@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false); //State for loading status
   const [website, setWebsite] = useState(""); //To store the website being crawled
-  const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
+  //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
   const [results, setResults] = useState(""); //State to hold search results
 
   const handleSearch = async () => {
@@ -18,7 +18,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: searchQuery }), // Pass the query as website
+        body: JSON.stringify({ website: website }), // Pass the query as website
       });
 
       if (!response.ok) {

@@ -15,7 +15,7 @@ import (
 )
 
 type SearchRequest struct {
-	Query string `json:"query"`
+	Website string `json:"query"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +84,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
 	indx := lib.MakeDBIndex(db, sessionID)
-	lib.Crawl(req.Query, indx)
+	lib.Crawl(req.Website, indx)
 
 	res := lib.Indexes.Search(indx, "simple")
 	response := fmt.Sprintf("%v", res)
