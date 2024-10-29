@@ -41,14 +41,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		url TEXT UNIQUE NOT NULL,
 		word_count INTEGER NOT NULL,
 		session_id UUID NOT NULL,
-		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
 		UNIQUE (url, session_id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS words (
 		id SERIAL PRIMARY KEY,
 		word TEXT UNIQUE NOT NULL,
 		session_id UUID NOT NULL,
-		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE,
 		UNIQUE (word, session_id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS mapping (
