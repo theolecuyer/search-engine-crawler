@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"mvp-seachengine/lib"
@@ -13,8 +14,19 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type SearchRequest struct {
+	Query string `json:"query"`
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Called")
+
+	var req SearchRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	dbURL := os.Getenv("POSTGRES_URL")
 	if dbURL == "" {
 		log.Fatal("No POSTGRES_URL environment variable")
@@ -72,10 +84,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
 	indx := lib.MakeDBIndex(db, sessionID)
-	lib.Crawl("https://cs272-f24.github.io/tests/project01/index.html", indx)
+	lib.Crawl(req.Query, indx)
 
 	res := lib.Indexes.Search(indx, "simple")
-	log.Printf("%v", res)
+	response := fmt.Sprintf("%v", res)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func deleteExpiredSessions(db *sql.DB) {
