@@ -85,7 +85,7 @@ func Crawl(baseURL string, index Indexes) {
 
 func loadRobots(hostName string) (float64, map[string]bool) {
 	var crawlDelay float64 = 0.1
-	robotsUrl := "http://" + hostName + "/top10/robots.txt"
+	robotsUrl := "http://" + hostName + "/robots.txt"
 	dissalowList := make(map[string]bool)
 	if res, err := downloadRobots(robotsUrl); err != nil {
 		log.Println("No robots file found, continuing standard crawling")

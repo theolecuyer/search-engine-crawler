@@ -84,6 +84,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
 	indx := lib.MakeDBIndex(db, sessionID)
+	fmt.Println("Crawling: ", req.Website)
 	lib.Crawl(req.Website, indx)
 
 	res := lib.Indexes.Search(indx, "simple")
