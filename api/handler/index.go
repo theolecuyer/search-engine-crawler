@@ -73,7 +73,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	createTables(db, tables)
 	deleteExpiredSessions(db)
-	fmt.Fprintf(w, "Successfully connected to the database!")
 
 	sessionID := uuid.New().String()
 	//Insert the current session into the database
@@ -84,8 +83,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
 	indx := lib.MakeDBIndex(db, sessionID)
-	fmt.Println("Crawling: ", req.Website)
+	fmt.Println(req.Website)
 	lib.Crawl(req.Website, indx)
+	fmt.Println("here")
 
 	res := lib.Indexes.Search(indx, "simple")
 	response := fmt.Sprintf("%v", res)
