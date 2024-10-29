@@ -24,7 +24,7 @@ func TestCleanHref(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.testname, func(t *testing.T) {
-			got := clean(test.hostName, test.hrefs)
+			got := Clean(test.hostName, test.hrefs)
 			var gotURLs []string
 			for i := range got {
 				gotURLs = append(gotURLs, got[i].String())

@@ -15,8 +15,8 @@ func main() {
 	var indx Indexes
 	if *indexType == "inmem" {
 		indx = MakeInMemoryIndex()
-		go webserver(indx)
-		crawl("http://www.usfca.edu/", indx)
+		go Webserver(indx)
+		Crawl("http://www.usfca.edu/", indx)
 	} else {
 		db, err := sql.Open("sqlite", "index.db")
 		if err != nil {
@@ -24,9 +24,9 @@ func main() {
 		}
 		defer db.Close()
 		indx = MakeDBIndex(db)
-		go webserver(indx)
+		go Webserver(indx)
 		if !*existingDB {
-			crawl("http://www.usfca.edu/", indx)
+			Crawl("http://www.usfca.edu/", indx)
 		}
 	}
 

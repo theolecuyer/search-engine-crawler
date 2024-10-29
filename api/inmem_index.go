@@ -45,7 +45,7 @@ func (i *InMemoryIndex) Search(query string) hits {
 	if stemmedWordQuery, err := snowball.Stem(query, "english", true); err == nil {
 		if word, exists := i.wordFreq[stemmedWordQuery]; exists {
 			for link, frequency := range word {
-				tfIDFScore := tfIDF(frequency, i.doclen[link], len(i.doclen), len(i.wordFreq[link]))
+				tfIDFScore := TfIDF(frequency, i.doclen[link], len(i.doclen), len(i.wordFreq[link]))
 				results = append(results, searchHit{link, frequency, tfIDFScore})
 				resultFrequencies[link] = frequency
 			}

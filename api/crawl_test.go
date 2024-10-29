@@ -90,7 +90,7 @@ func TestCrawl(t *testing.T) {
 			}))
 			defer svr.Close()
 			idx := MakeInMemoryIndex()
-			crawl(svr.URL, idx)
+			Crawl(svr.URL, idx)
 			var gotURLS []string
 			for u := range idx.doclen {
 				parsedUrl, err := url.Parse(u)

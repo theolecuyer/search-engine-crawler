@@ -25,7 +25,7 @@ func (results hits) Swap(i, j int) {
 	results[i], results[j] = results[j], results[i]
 }
 
-func tfIDF(wordFrequency int, documentLength int, totalDocs int, amtOfDocWithWord int) float64 {
+func TfIDF(wordFrequency int, documentLength int, totalDocs int, amtOfDocWithWord int) float64 {
 	tf := float64(wordFrequency) / float64(documentLength)
 	idf := math.Log10(float64(totalDocs)) / float64(amtOfDocWithWord+1)
 	tfIDFScore := (tf * idf)

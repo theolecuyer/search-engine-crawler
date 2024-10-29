@@ -56,7 +56,7 @@ func TestStop(t *testing.T) {
 			}))
 			idx := MakeInMemoryIndex()
 			results := make(map[string]struct{})
-			crawl(svr.URL, idx)
+			Crawl(svr.URL, idx)
 			for word := range idx.wordFreq {
 				results[word] = struct{}{}
 			}

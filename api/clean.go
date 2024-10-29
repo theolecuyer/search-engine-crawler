@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func clean(host string, hrefs []string) []*url.URL {
+func Clean(host string, hrefs []string) []*url.URL {
 	var cleaned []*url.URL
 	u, err := url.Parse(host)
 	if err != nil {

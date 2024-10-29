@@ -7,7 +7,7 @@ import (
 
 func TestCrawlDelay(t *testing.T) {
 	indx := MakeInMemoryIndex()
-	go webserver(indx)
+	go Webserver(indx)
 	time.Sleep(1 * time.Second)
 	tests := []struct {
 		testName string
@@ -24,7 +24,7 @@ func TestCrawlDelay(t *testing.T) {
 		for _, test := range tests {
 			t1 := time.Now()
 			idx := MakeInMemoryIndex()
-			crawl(test.url, idx)
+			Crawl(test.url, idx)
 			t2 := time.Now()
 			if t2.Sub(t1) < (2 * time.Second) {
 				t.Errorf("Delay was too fast\n")

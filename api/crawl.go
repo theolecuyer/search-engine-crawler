@@ -16,7 +16,7 @@ import (
 	"github.com/kljensen/snowball"
 )
 
-func crawl(baseURL string, index Indexes) {
+func Crawl(baseURL string, index Indexes) {
 	visitedUrls := make(map[string]bool) //Make a map for all visited urls
 	stopWordMap := loadStopWords("stopwords-en.json")
 	host, err := url.Parse(baseURL)
@@ -45,7 +45,7 @@ func crawl(baseURL string, index Indexes) {
 			}
 			if allowed {
 				wg.Add(1)
-				go download(currentUrl, chExtract, &wg)
+				go Download(currentUrl, chExtract, &wg)
 				time.Sleep(time.Duration(crawlDelay) * time.Second)
 			}
 		}
@@ -56,7 +56,7 @@ func crawl(baseURL string, index Indexes) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				words, hrefs := extract(content.data)
+				words, hrefs := Extract(content.data)
 				currentWords := []string{}
 				for _, word := range words {
 					if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
@@ -67,7 +67,7 @@ func crawl(baseURL string, index Indexes) {
 						}
 					}
 				}
-				links := clean(baseURL, hrefs)
+				links := Clean(baseURL, hrefs)
 				for _, cleanedURL := range links {
 					mu.Lock()
 					if !visitedUrls[cleanedURL.String()] && hostName == cleanedURL.Host {

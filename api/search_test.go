@@ -59,7 +59,7 @@ func TestSearch(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			idx := MakeInMemoryIndex()
-			crawl(test.url, idx)
+			Crawl(test.url, idx)
 			got := idx.Search(test.word)
 			results := Frequency{}
 			for _, hit := range got {

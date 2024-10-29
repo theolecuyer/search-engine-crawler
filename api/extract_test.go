@@ -33,7 +33,7 @@ func TestExtract(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testname, func(t *testing.T) {
-			wordsGot, hrefsGot := extract(string(test.body))
+			wordsGot, hrefsGot := Extract(string(test.body))
 			if !reflect.DeepEqual(wordsGot, test.wordsWant) || !reflect.DeepEqual(hrefsGot, test.hrefsWant) {
 				t.Errorf("\nWords were: %v\nWanted: %v\nHrefs were: %v\nWanted: %v", wordsGot, test.wordsWant, hrefsGot, test.hrefsWant)
 			}

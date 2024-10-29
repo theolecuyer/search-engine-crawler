@@ -46,7 +46,7 @@ func TestDisallow(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
 			idx := MakeInMemoryIndex()
-			crawl(test.url, idx)
+			Crawl(test.url, idx)
 			got := idx.Search(test.searchterm)
 			sort.Sort(got)
 			results := Frequency{}

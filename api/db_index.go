@@ -155,7 +155,7 @@ func (d *DatabaseIndex) Search(query string) hits {
 		for url, frequency := range resultUrl {
 			currURL := d.getURL(url)
 			docLen := d.getURLWordCount(url)
-			tfIDFScore := tfIDF(frequency, docLen, totalDocCount, len(resultUrl))
+			tfIDFScore := TfIDF(frequency, docLen, totalDocCount, len(resultUrl))
 			results = append(results, searchHit{currURL, frequency, tfIDFScore})
 		}
 	}

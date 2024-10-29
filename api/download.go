@@ -13,7 +13,7 @@ type downloadResults struct {
 	data string
 }
 
-func download(url string, chExtract chan downloadResults, wg *sync.WaitGroup) {
+func Download(url string, chExtract chan downloadResults, wg *sync.WaitGroup) {
 	defer wg.Done()
 	if rsp, err := http.Get(url); err != nil {
 		log.Printf("Download returned %v", err)

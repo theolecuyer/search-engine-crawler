@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func webserver(index Indexes) {
+func Webserver(index Indexes) {
 	http.Handle("/top10/", http.StripPrefix("/top10/", http.FileServer(http.Dir("top10"))))
 	//Stand up a server that is called by listen and serve for /search at localhost:8080/search
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {

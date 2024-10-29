@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-func extract(body string) ([]string, []string) {
+func Extract(body string) ([]string, []string) {
 	//Make the parser object
 	doc, err := html.Parse(strings.NewReader(body))
 	if err != nil {
