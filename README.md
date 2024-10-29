@@ -15,7 +15,7 @@
 
 - **Next.js**: For handling the front-end, user interface, and calls to the custom API.
 - **PostgreSQL**: Storage of crawled data and search indexes. Utilized for its concurrency power.
-- **Go (Golang)**: For building the custom API and handling backend indexing and searching processes.
+- **Go**: For building the custom API and handling backend indexing and searching processes.
 
 **Key Libraries and Packages:**
 
