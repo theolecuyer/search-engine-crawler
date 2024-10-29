@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"unicode"
@@ -28,7 +29,8 @@ func Extract(body string) ([]string, []string) {
 			// Clean each word to filter out stopwords
 			for _, word := range stringSlice {
 				cleanedWord := stopwords.CleanString(word, "en", true)
-				if string(cleanedWord) != "" {
+				if string(strings.TrimSpace(cleanedWord)) != "" {
+					fmt.Println("Appending ", cleanedWord)
 					words = append(words, string(cleanedWord))
 				}
 			}
