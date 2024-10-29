@@ -8,3 +8,8 @@ require (
 	github.com/lib/pq v1.10.9
 	golang.org/x/net v0.29.0
 )
+
+require (
+	github.com/Diggernaut/stopwords v0.0.0-20170220121256-d38349e58d47 // indirect
+	golang.org/x/text v0.18.0 // indirect
+)

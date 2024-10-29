@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/Diggernaut/stopwords"
 	"golang.org/x/net/html"
 )
 
@@ -19,13 +20,20 @@ func Extract(body string) ([]string, []string) {
 	var f func(*html.Node)
 	f = func(n *html.Node) {
 		if n.Type == html.TextNode && n.Parent.Data != "style" {
-			//Use fields func to remove anything that is not a number or letter
+			// Remove non-letter and non-number characters
 			stringSlice := strings.FieldsFunc(n.Data, func(r rune) bool {
 				return (!unicode.IsLetter(r) && !unicode.IsNumber(r))
 			})
-			//Append each word individually to the slice
-			words = append(words, stringSlice...)
+
+			// Clean each word to filter out stopwords
+			for _, word := range stringSlice {
+				cleanedWord := stopwords.CleanString(word, "en", true)
+				if string(cleanedWord) != "" {
+					words = append(words, string(cleanedWord))
+				}
+			}
 		}
+
 		//Get hrefs from the parser
 		if n.Type == html.ElementNode && n.Data == "a" {
 			for _, a := range n.Attr {

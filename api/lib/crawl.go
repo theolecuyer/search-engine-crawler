@@ -1,13 +1,9 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/url"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,7 +15,6 @@ import (
 
 func Crawl(baseURL string, index Indexes) {
 	visitedUrls := make(map[string]bool) //Make a map for all visited urls
-	stopWordMap := loadStopWords("stopwords-en.json")
 	host, err := url.Parse(baseURL)
 	if err != nil {
 		log.Printf("URL Parse returned %v", err)
@@ -63,9 +58,7 @@ func Crawl(baseURL string, index Indexes) {
 					if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
 						log.Printf("Snowball error: %v", err)
 					} else {
-						if _, exists := stopWordMap[stemmedWord]; !exists {
-							currentWords = append(currentWords, stemmedWord)
-						}
+						currentWords = append(currentWords, stemmedWord)
 					}
 				}
 				links := Clean(baseURL, hrefs)
@@ -88,29 +81,6 @@ func Crawl(baseURL string, index Indexes) {
 	close(chDownload)
 	close(chExtract)
 	fmt.Printf("All goroutines finished")
-}
-
-func loadStopWords(link string) map[string]struct{} {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Failed to get current working directory: %v", err)
-	}
-	fullPath := filepath.Join(cwd, link)
-	stopWordsFile, err := os.Open(fullPath)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer stopWordsFile.Close()
-	byteValue, _ := io.ReadAll(stopWordsFile)
-	var stopWords []string
-	if json.Unmarshal(byteValue, &stopWords); err != nil {
-		log.Printf("Json unmarshal returned: %v", err)
-	}
-	stopWordMap := make(map[string]struct{})
-	for _, word := range stopWords {
-		stopWordMap[word] = struct{}{}
-	}
-	return stopWordMap
 }
 
 func loadRobots(hostName string) (float64, map[string]bool) {
