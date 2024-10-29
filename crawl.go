@@ -32,56 +32,60 @@ func crawl(baseURL string, index Indexes) {
 	var mu sync.Mutex     //Make a mutex for the visited map
 	var wg sync.WaitGroup //Waitrgoup to find out when all goroutines have finished
 	chDownload <- baseURL //Add the first url
-	//Start a goroutine to manage all extract/download results
+	//Start a goroutine to manage all download results
 	go func() {
-		for {
-			select {
-			case currentUrl := <-chDownload:
-				allowed := true
-				for dissalowedPath := range dissalowList {
-					matched, _ := regexp.MatchString(dissalowedPath, currentUrl)
-					if matched {
-						allowed = false
-						break
-					}
+		for currentUrl := range chDownload {
+			allowed := true
+			for dissalowedPath := range dissalowList {
+				matched, _ := regexp.MatchString(dissalowedPath, currentUrl)
+				if matched {
+					allowed = false
+					break
 				}
-				if allowed {
-					wg.Add(1)
-					go download(currentUrl, chExtract, &wg)
-					time.Sleep(time.Duration(crawlDelay) * time.Second)
-				}
-			case content := <-chExtract:
+			}
+			if allowed {
 				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					words, hrefs := extract(content.data)
-					currentWords := []string{}
-					for _, word := range words {
-						if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
-							log.Printf("Snowball error: %v", err)
-						} else {
-							if _, exists := stopWordMap[stemmedWord]; !exists {
-								currentWords = append(currentWords, stemmedWord)
-							}
-						}
-					}
-					links := clean(baseURL, hrefs)
-					for _, cleanedURL := range links {
-						mu.Lock()
-						if !visitedUrls[cleanedURL.String()] && hostName == cleanedURL.Host {
-							chDownload <- cleanedURL.String()
-							visitedUrls[cleanedURL.String()] = true
-						}
-						mu.Unlock()
-					}
-					index.AddToIndex(content.url, currentWords)
-				}()
+				go download(currentUrl, chExtract, &wg)
+				time.Sleep(time.Duration(crawlDelay) * time.Second)
 			}
 		}
 	}()
+	//Start a goroutine to manage all extract results
+	go func() {
+		for content := range chExtract {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				words, hrefs := extract(content.data)
+				currentWords := []string{}
+				for _, word := range words {
+					if stemmedWord, err := snowball.Stem(word, "english", true); err != nil {
+						log.Printf("Snowball error: %v", err)
+					} else {
+						if _, exists := stopWordMap[stemmedWord]; !exists {
+							currentWords = append(currentWords, stemmedWord)
+						}
+					}
+				}
+				links := clean(baseURL, hrefs)
+				for _, cleanedURL := range links {
+					mu.Lock()
+					if !visitedUrls[cleanedURL.String()] && hostName == cleanedURL.Host {
+						chDownload <- cleanedURL.String()
+						visitedUrls[cleanedURL.String()] = true
+					}
+					mu.Unlock()
+				}
+				index.AddToIndex(content.url, currentWords)
+			}()
+		}
+	}()
+
 	//Wait for intial goroutines to spin up and call others
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 	wg.Wait()
+	close(chDownload)
+	close(chExtract)
 	fmt.Printf("All goroutines finished")
 }
 

@@ -13,7 +13,7 @@ func clean(host string, hrefs []string) []*url.URL {
 		log.Fatalf("url.Parse 1 returned %v\n", err)
 	}
 	for _, href := range hrefs {
-		if host != "http://localhost:8080" {
+		if u.Host != "localhost:8080" {
 			href = strings.ReplaceAll(href, " ", "")
 			href = strings.ReplaceAll(href, "\n", "")
 		}
