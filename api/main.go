@@ -3,18 +3,19 @@ package handler
 import (
 	"fmt"
 	"log"
+	"mvp-seachengine/api/internal"
 	"net/http"
 	"os"
 	"sync"
 )
 
-var indx Indexes
+var indx internal.Indexes
 var indexOnce sync.Once
 var crawled bool
 
 func initIndex(indexType string, existingDB bool) {
 	indexOnce.Do(func() {
-		indx = MakeInMemoryIndex()
+		indx = internal.MakeInMemoryIndex()
 	})
 }
 

@@ -1,4 +1,4 @@
-module project04
+module mvp-seachengine
 
 go 1.23.0
 
