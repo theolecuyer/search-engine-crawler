@@ -15,7 +15,7 @@ import (
 )
 
 type SearchRequest struct {
-	Website string `json:"query"`
+	Website string `json:"website"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
