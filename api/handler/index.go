@@ -29,8 +29,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to ping database: %v", err)
 	}
 
-	deleteExpiredSessions(db)
-
 	tables := []string{
 		`CREATE TABLE IF NOT EXISTS sessions (
 			session_id UUID PRIMARY KEY,
@@ -62,6 +60,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	);`,
 	}
 	createTables(db, tables)
+	deleteExpiredSessions(db)
 	fmt.Fprintf(w, "Successfully connected to the database!")
 
 	sessionID := uuid.New().String()
