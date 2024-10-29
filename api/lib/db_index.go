@@ -64,42 +64,33 @@ func (d *DatabaseIndex) AddToIndex(url string, currWords []string) {
 		}
 	}()
 
-	res, err := tx.Stmt(d.insertURLStmt).Exec(url, len(currWords), d.sessionID)
+	var urlID int64
+	err = tx.Stmt(d.insertURLStmt).QueryRow(url, len(currWords), d.sessionID).Scan(&urlID)
 	if err != nil {
-		log.Printf("URL insert returned %v\n", err)
-		return
-	}
-
-	urlID, err := res.LastInsertId()
-	if err != nil {
-		log.Printf("URL last insert ID returned %v\n", err)
-		return
+		if err == sql.ErrNoRows {
+			err = tx.QueryRow("SELECT id FROM urls WHERE url = $1 AND session_id = $2", url, d.sessionID).Scan(&urlID)
+			if err != nil {
+				log.Printf("Failed to get existing URL ID: %v\n", err)
+				return
+			}
+		} else {
+			log.Printf("URL insert failed: %v\n", err)
+			return
+		}
 	}
 
 	for _, word := range currWords {
 		var wordID int64
-		res, err := tx.Stmt(d.insertWordStmt).Exec(word, d.sessionID)
+		err = tx.Stmt(d.insertWordStmt).QueryRow(word, d.sessionID).Scan(&wordID)
 		if err != nil {
-			log.Printf("Word insert returned %v\n", err)
-			return
-		}
-
-		num, err := res.RowsAffected()
-		if err != nil {
-			log.Printf("Rows affected returned %v\n", err)
-			return
-		}
-
-		if num != 0 {
-			wordID, err = res.LastInsertId()
-			if err != nil {
-				log.Printf("Last insert ID for word returned %v\n", err)
-				return
-			}
-		} else {
-			err = tx.Stmt(d.getWordIDStmt).QueryRow(word, d.sessionID).Scan(&wordID)
-			if err != nil {
-				log.Printf("Get word ID returned %v\n", err)
+			if err == sql.ErrNoRows {
+				err = tx.Stmt(d.getWordIDStmt).QueryRow(word, d.sessionID).Scan(&wordID)
+				if err != nil {
+					log.Printf("Failed to get existing word ID: %v\n", err)
+					return
+				}
+			} else {
+				log.Printf("Word insert failed: %v\n", err)
 				return
 			}
 		}

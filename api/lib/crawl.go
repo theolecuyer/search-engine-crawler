@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -90,7 +91,12 @@ func Crawl(baseURL string, index Indexes) {
 }
 
 func loadStopWords(link string) map[string]struct{} {
-	stopWordsFile, err := os.Open(link)
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %v", err)
+	}
+	fullPath := filepath.Join(cwd, link)
+	stopWordsFile, err := os.Open(fullPath)
 	if err != nil {
 		fmt.Println(err)
 	}
