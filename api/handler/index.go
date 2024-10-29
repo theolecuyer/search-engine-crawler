@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"mvp-seachengine/api/lib"
+	"mvp-seachengine/lib"
 	"net/http"
 	"os"
 	"time"

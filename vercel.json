@@ -5,12 +5,20 @@
       "src": "api/handler/*.go",
       "use": "@vercel/go",
       "config": { "goVersion": "1.23" }
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next"
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/api/handler/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/api/handler/index.go"
+      "dest": "/frontend/$1"
     }
   ]
 }
