@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -14,8 +14,6 @@ var crawled bool
 
 func initIndex(indexType string, existingDB bool) {
 	indexOnce.Do(func() {
-		// Initialize your index here
-		// For now, we'll just use a placeholder
 		indx = MakeInMemoryIndex()
 	})
 }
