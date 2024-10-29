@@ -29,6 +29,16 @@ func initIndex(indexType string, existingDB bool) {
 	})
 }
 
+func mainHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Entering mainHandler")
+	switch r.URL.Path {
+	case "/":
+		CrawlHandler(w, r)
+	default:
+		http.NotFound(w, r)
+	}
+}
+
 func CrawlHandler(w http.ResponseWriter, r *http.Request) {
 	if crawled {
 		http.Error(w, "Crawl already started", http.StatusConflict)
@@ -45,16 +55,10 @@ func CrawlHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to the API!"))
-	})
-
 	indexType := "inmem"
 	existingDB := false
 
 	initIndex(indexType, existingDB)
 
-	http.HandleFunc("/api/crawl", CrawlHandler)
-
-	Webserver(indx)
+	http.HandleFunc("/", mainHandler)
 }
