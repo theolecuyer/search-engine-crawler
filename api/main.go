@@ -2,36 +2,55 @@ package main
 
 import (
 	"database/sql"
-	"flag"
 	"log"
-	"time"
+	"net/http"
+	"sync"
 )
 
-func main() {
-	indexType := flag.String("index", "", "Specify the index type")
-	existingDB := flag.Bool("existingDB", false, "Use the existing index.db file")
-	flag.Parse()
+var indx Indexes
+var indexOnce sync.Once
+var crawled bool
 
-	var indx Indexes
-	if *indexType == "inmem" {
-		indx = MakeInMemoryIndex()
-		go Webserver(indx)
+func initIndex(indexType string, existingDB bool) {
+	indexOnce.Do(func() {
+		if indexType == "inmem" {
+			indx = MakeInMemoryIndex()
+		} else {
+			db, err := sql.Open("sqlite", "index.db")
+			if err != nil {
+				log.Fatalf("DB open returned %v\n", err)
+			}
+			defer db.Close()
+			indx = MakeDBIndex(db)
+			if !existingDB {
+				Crawl("http://www.usfca.edu/", indx) // Start crawling if not using an existing DB
+			}
+		}
+	})
+}
+
+func CrawlHandler(w http.ResponseWriter, r *http.Request) {
+	if crawled {
+		http.Error(w, "Crawl already started", http.StatusConflict)
+		return
+	}
+
+	go func() {
 		Crawl("http://www.usfca.edu/", indx)
-	} else {
-		db, err := sql.Open("sqlite", "index.db")
-		if err != nil {
-			log.Printf("DB open returned %v\n", err)
-		}
-		defer db.Close()
-		indx = MakeDBIndex(db)
-		go Webserver(indx)
-		if !*existingDB {
-			Crawl("http://www.usfca.edu/", indx)
-		}
-	}
+		crawled = true
+	}()
 
-	for {
-		//Run the server until manual exit
-		time.Sleep(1 * time.Second)
-	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write([]byte("Crawl started"))
+}
+
+func main() {
+	indexType := "inmem"
+	existingDB := false
+
+	initIndex(indexType, existingDB)
+
+	http.HandleFunc("/api/crawl", CrawlHandler)
+
+	Webserver(indx)
 }
