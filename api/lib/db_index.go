@@ -23,8 +23,8 @@ type DatabaseIndex struct {
 
 func MakeDBIndex(db *sql.DB, sessionID string) *DatabaseIndex {
 	//Insert statements
-	insertURLStmt := prepare(db, `INSERT INTO urls (url, word_count, session_id) VALUES ($1, $2, $3) ON CONFLICT (url) DO NOTHING RETURNING id`)
-	insertWordStmt := prepare(db, `INSERT INTO words (word, session_id) VALUES ($1, $2) ON CONFLICT (word) DO NOTHING RETURNING id`)
+	insertURLStmt := prepare(db, `INSERT INTO urls (url, word_count, session_id) VALUES ($1, $2, $3) ON CONFLICT (url, session_id) DO NOTHING RETURNING id`)
+	insertWordStmt := prepare(db, `INSERT INTO words (word, session_id) VALUES ($1, $2) ON CONFLICT (word, session_id) DO NOTHING RETURNING id`)
 	insertFreqStmt := prepare(db, `INSERT INTO mapping (word_id, url_id, frequency) VALUES ($1, $2, 1) ON CONFLICT (word_id, url_id) DO UPDATE SET frequency = mapping.frequency + 1`)
 
 	//Queries
