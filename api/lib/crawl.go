@@ -18,7 +18,7 @@ import (
 
 func Crawl(baseURL string, index Indexes) {
 	visitedUrls := make(map[string]bool) //Make a map for all visited urls
-	stopWordMap := loadStopWords("stopwords-en.json")
+	stopWordMap := loadStopWords("api/lib/stopwords-en.json")
 	host, err := url.Parse(baseURL)
 	if err != nil {
 		log.Printf("URL Parse returned %v", err)

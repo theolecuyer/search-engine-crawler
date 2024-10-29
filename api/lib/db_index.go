@@ -2,7 +2,6 @@ package lib
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"sort"
 
@@ -23,14 +22,15 @@ type DatabaseIndex struct {
 }
 
 func MakeDBIndex(db *sql.DB, sessionID string) *DatabaseIndex {
-	insertURLStmt := prepare(db, `INSERT INTO urls (url, word_count, user_id) VALUES ($1, $2, (SELECT user_id FROM users WHERE session_id = $3)) ON CONFLICT (url) DO NOTHING`)
-	insertWordStmt := prepare(db, `INSERT INTO words (word, user_id) VALUES ($1, (SELECT user_id FROM users WHERE session_id = $2)) ON CONFLICT (word) DO NOTHING`)
-	insertFreqStmt := prepare(db, `INSERT INTO mapping (word_id, url_id, frequency) VALUES ($1, $2, 1) ON CONFLICT (word_id, url_id) DO UPDATE SET frequency = mapping.frequency + 1;`)
+	//Insert statements
+	insertURLStmt := prepare(db, `INSERT INTO urls (url, word_count, session_id) VALUES ($1, $2, $3) ON CONFLICT (url) DO NOTHING RETURNING id`)
+	insertWordStmt := prepare(db, `INSERT INTO words (word, session_id) VALUES ($1, $2) ON CONFLICT (word) DO NOTHING RETURNING id`)
+	insertFreqStmt := prepare(db, `INSERT INTO mapping (word_id, url_id, frequency) VALUES ($1, $2, 1) ON CONFLICT (word_id, url_id) DO UPDATE SET frequency = mapping.frequency + 1`)
 
 	//Queries
-	getWordIDStmt := prepare(db, `SELECT id FROM words WHERE word = $1 AND user_id = (SELECT user_id FROM users WHERE session_id = $2)`)
-	getURLStmt := prepare(db, `SELECT url FROM urls WHERE id = $1 AND user_id = (SELECT user_id FROM users WHERE session_id = $2)`)
-	getURLWordCountStmt := prepare(db, `SELECT word_count FROM urls WHERE id = $1 AND user_id = (SELECT user_id FROM users WHERE session_id = $2)`)
+	getWordIDStmt := prepare(db, `SELECT id FROM words WHERE word = $1 AND session_id = $2`)
+	getURLStmt := prepare(db, `SELECT url FROM urls WHERE id = $1 AND session_id = $2`)
+	getURLWordCountStmt := prepare(db, `SELECT word_count FROM urls WHERE id = $1 AND session_id = $2`)
 	getWordFreqStmt := prepare(db, `SELECT url_id, frequency FROM mapping WHERE word_id = $1`)
 	return &DatabaseIndex{
 		db:                  db,
@@ -49,69 +49,40 @@ func (d *DatabaseIndex) AddToIndex(url string, currWords []string) {
 	//Use transactions to batch apply queries to the db
 	tx, err := d.db.Begin()
 	if err != nil {
-		log.Printf("Tx returned: %v\n", err)
+		log.Printf("Transaction begin failed: %v\n", err)
 		return
 	}
-	fmt.Printf("Indexing DB at: %s\n", url)
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
 
-	// Insert the URL with session ID
-	res, err := tx.Stmt(d.insertURLStmt).Exec(url, len(currWords), d.sessionID)
+	var urlID int64
+	err = tx.Stmt(d.insertURLStmt).QueryRow(url, len(currWords), d.sessionID).Scan(&urlID)
 	if err != nil {
-		log.Printf("URL insert returned %v\n", err)
-		tx.Rollback()
-		return
-	}
-
-	urlID, err := res.LastInsertId()
-	if err != nil {
-		log.Printf("URL last insert returned %v\n", err)
-		tx.Rollback()
+		log.Printf("Failed to insert URL: %v\n", err)
 		return
 	}
 
 	for _, word := range currWords {
 		var wordID int64
-		// Insert the word with session ID
-		res, err := tx.Stmt(d.insertWordStmt).Exec(word, d.sessionID)
+		err = tx.Stmt(d.insertWordStmt).QueryRow(word, d.sessionID).Scan(&wordID)
 		if err != nil {
-			log.Printf("Word insert returned %v\n", err)
-			tx.Rollback()
-			return
-		}
-
-		num, err := res.RowsAffected()
-		if err != nil {
-			log.Printf("Rows affected returned %v\n", err)
-			tx.Rollback()
-			return
-		}
-
-		if num != 0 {
-			wordID, err = res.LastInsertId()
+			err = tx.Stmt(d.getWordIDStmt).QueryRow(word, d.sessionID).Scan(&wordID)
 			if err != nil {
-				log.Printf("Word insert returned %v\n", err)
-				tx.Rollback()
-				return
-			}
-		} else {
-			err := tx.Stmt(d.getWordIDStmt).QueryRow(word).Scan(&wordID)
-			if err != nil {
-				log.Printf("Get word ID returned %v\n", err)
-				tx.Rollback()
+				log.Printf("Failed to get word ID for %s: %v\n", word, err)
 				return
 			}
 		}
 
 		_, err = tx.Stmt(d.insertFreqStmt).Exec(wordID, urlID)
 		if err != nil {
-			log.Printf("Insert frequency returned %v\n", err)
-			tx.Rollback()
+			log.Printf("Failed to insert frequency: %v\n", err)
 			return
 		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		log.Printf("Tx commit returned %v\n", err)
 	}
 }
 
