@@ -14,6 +14,7 @@ import (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Called")
 	dbURL := os.Getenv("POSTGRES_URL")
 	if dbURL == "" {
 		log.Fatal("No POSTGRES_URL environment variable")
