@@ -112,7 +112,8 @@ func (d *DatabaseIndex) Search(query string) hits {
 			log.Panicf("Lookup word freq returned %v\n", err)
 		}
 		defer rows.Close()
-		resultUrl := make(map[int]int) // URL id: frequency
+
+		resultUrl := make(map[int]int)
 		for rows.Next() {
 			var wordFreq int
 			var urlID int
@@ -120,13 +121,17 @@ func (d *DatabaseIndex) Search(query string) hits {
 			if err != nil {
 				log.Printf("Failed to scan row %v\n", err)
 			}
-			resultUrl[urlID] = wordFreq
+			if d.isURLInSession(urlID) {
+				resultUrl[urlID] = wordFreq
+			}
 		}
-		row := d.db.QueryRow("SELECT COUNT(*) FROM urls WHERE user_id = (SELECT user_id FROM users WHERE session_id = $1)", d.sessionID)
+
+		row := d.db.QueryRow("SELECT COUNT(*) FROM urls WHERE session_id = $1", d.sessionID)
 		var totalDocCount int
 		if err := row.Scan(&totalDocCount); err != nil {
 			log.Printf("Error counting rows: %v", err)
 		}
+
 		for url, frequency := range resultUrl {
 			currURL := d.getURL(url)
 			docLen := d.getURLWordCount(url)
@@ -136,6 +141,16 @@ func (d *DatabaseIndex) Search(query string) hits {
 	}
 	sort.Sort(results)
 	return results
+}
+
+func (d *DatabaseIndex) isURLInSession(urlID int) bool {
+	var count int
+	err := d.db.QueryRow("SELECT COUNT(*) FROM urls WHERE id = $1 AND session_id = $2", urlID, d.sessionID).Scan(&count)
+	if err != nil {
+		log.Printf("Error checking URL in session: %v", err)
+		return false
+	}
+	return count > 0
 }
 
 func prepare(db *sql.DB, statement string) *sql.Stmt {

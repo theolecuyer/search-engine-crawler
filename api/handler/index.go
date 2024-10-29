@@ -42,12 +42,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		word_count INTEGER NOT NULL,
 		session_id UUID NOT NULL,
 		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+		UNIQUE (url, session_id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS words (
 		id SERIAL PRIMARY KEY,
 		word TEXT UNIQUE NOT NULL,
 		session_id UUID NOT NULL,
 		FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+		UNIQUE (word, session_id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS mapping (
 		word_id INTEGER,
@@ -71,6 +73,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	indx := lib.MakeDBIndex(db, sessionID)
 	lib.Crawl("https://cs272-f24.github.io/tests/project01/index.html", indx)
+
+	res := lib.Indexes.Search(indx, "simple")
+	log.Printf("%v", res)
 }
 
 func deleteExpiredSessions(db *sql.DB) {
