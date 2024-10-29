@@ -7,7 +7,7 @@
 - **Ethical Crawling**: Complies with `robots.txt` files to respect website rules.
 - **TF-IDF Ranking**: Ranks pages using TF-IDF (Term Frequency-Inverse Document Frequency) to ensure relevant search results.
 - **Full-Text Search**: Search through content from a given website with ranked results.
-- **One-Site Focused**: Indexes and searches only a single website, making it an ideal tool for personal or single-site projects.
+- **One-Site Focused**: Indexes and searches only a single website, staying within the boundaries of the given host.
 
 ## Used Technologies
 
