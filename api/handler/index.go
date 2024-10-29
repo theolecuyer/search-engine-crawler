@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"mvp-seachengine/api/internal"
+	"mvp-seachengine/api/lib"
 	"net/http"
 	"os"
 	"time"
@@ -68,8 +68,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	); err != nil {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
-	indx := internal.MakeDBIndex(db, sessionID)
-	internal.Crawl("https://cs272-f24.github.io/tests/project01/index.html", indx)
+	indx := lib.MakeDBIndex(db, sessionID)
+	lib.Crawl("https://cs272-f24.github.io/tests/project01/index.html", indx)
 }
 
 func deleteExpiredSessions(db *sql.DB) {
