@@ -4,9 +4,7 @@
     {
       "src": "api/main.go",
       "use": "@vercel/go",
-      "config": {
-        "buildTags": ["vercel"]
-      }
+      "config": { "goVersion": "1.23" }
     }
   ],
   "routes": [
