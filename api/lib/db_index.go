@@ -54,33 +54,59 @@ func (d *DatabaseIndex) AddToIndex(url string, currWords []string) {
 	}
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			if rbErr := tx.Rollback(); rbErr != nil {
+				log.Printf("Transaction rollback failed: %v\n", rbErr)
+			}
 			return
 		}
-		tx.Commit()
+		if commitErr := tx.Commit(); commitErr != nil {
+			log.Printf("Transaction commit failed: %v\n", commitErr)
+		}
 	}()
 
-	var urlID int64
-	err = tx.Stmt(d.insertURLStmt).QueryRow(url, len(currWords), d.sessionID).Scan(&urlID)
+	res, err := tx.Stmt(d.insertURLStmt).Exec(url, len(currWords), d.sessionID)
 	if err != nil {
-		log.Printf("Failed to insert URL: %v\n", err)
+		log.Printf("URL insert returned %v\n", err)
+		return
+	}
+
+	urlID, err := res.LastInsertId()
+	if err != nil {
+		log.Printf("URL last insert ID returned %v\n", err)
 		return
 	}
 
 	for _, word := range currWords {
 		var wordID int64
-		err = tx.Stmt(d.insertWordStmt).QueryRow(word, d.sessionID).Scan(&wordID)
+		res, err := tx.Stmt(d.insertWordStmt).Exec(word, d.sessionID)
 		if err != nil {
+			log.Printf("Word insert returned %v\n", err)
+			return
+		}
+
+		num, err := res.RowsAffected()
+		if err != nil {
+			log.Printf("Rows affected returned %v\n", err)
+			return
+		}
+
+		if num != 0 {
+			wordID, err = res.LastInsertId()
+			if err != nil {
+				log.Printf("Last insert ID for word returned %v\n", err)
+				return
+			}
+		} else {
 			err = tx.Stmt(d.getWordIDStmt).QueryRow(word, d.sessionID).Scan(&wordID)
 			if err != nil {
-				log.Printf("Failed to get word ID for %s: %v\n", word, err)
+				log.Printf("Get word ID returned %v\n", err)
 				return
 			}
 		}
 
 		_, err = tx.Stmt(d.insertFreqStmt).Exec(wordID, urlID)
 		if err != nil {
-			log.Printf("Failed to insert frequency: %v\n", err)
+			log.Printf("Insert frequency returned %v\n", err)
 			return
 		}
 	}

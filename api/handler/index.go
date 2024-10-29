@@ -60,11 +60,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	createTables(db, tables)
 	fmt.Fprintf(w, "Successfully connected to the database!")
+
 	sessionID := uuid.New().String()
 	//Insert the current session into the database
 	if _, err := db.Exec(
 		`INSERT INTO sessions (session_id, expires_at) VALUES ($1, $2)`,
-		sessionID, time.Now().Add(30*time.Minute),
+		sessionID, time.Now().Add(15*time.Minute),
 	); err != nil {
 		log.Fatalf("Failed to insert session: %v", err)
 	}
