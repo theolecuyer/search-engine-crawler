@@ -1,9 +1,10 @@
 package main
 
 import (
-	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -13,19 +14,9 @@ var crawled bool
 
 func initIndex(indexType string, existingDB bool) {
 	indexOnce.Do(func() {
-		if indexType == "inmem" {
-			indx = MakeInMemoryIndex()
-		} else {
-			db, err := sql.Open("sqlite", "index.db")
-			if err != nil {
-				log.Fatalf("DB open returned %v\n", err)
-			}
-			defer db.Close()
-			indx = MakeDBIndex(db)
-			if !existingDB {
-				Crawl("http://www.usfca.edu/", indx) // Start crawling if not using an existing DB
-			}
-		}
+		// Initialize your index here
+		// For now, we'll just use a placeholder
+		indx = MakeInMemoryIndex()
 	})
 }
 
@@ -33,6 +24,8 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Entering mainHandler")
 	switch r.URL.Path {
 	case "/":
+		fmt.Fprintf(w, "Welcome to the search engine!")
+	case "/crawl":
 		CrawlHandler(w, r)
 	default:
 		http.NotFound(w, r)
@@ -45,11 +38,8 @@ func CrawlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go func() {
-		Crawl("http://www.usfca.edu/", indx)
-		crawled = true
-	}()
-
+	crawled = true
+	//Add crawl
 	w.WriteHeader(http.StatusAccepted)
 	w.Write([]byte("Crawl started"))
 }
@@ -60,5 +50,14 @@ func main() {
 
 	initIndex(indexType, existingDB)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	http.HandleFunc("/", mainHandler)
+	log.Printf("Server starting on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal(err)
+	}
 }
