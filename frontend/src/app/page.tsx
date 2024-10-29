@@ -7,7 +7,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false); //State for loading status
   const [website, setWebsite] = useState(""); //To store the website being crawled
   //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
-  const [results, setResults] = useState(""); //State to hold search results
+  const [results, setResults] = useState([]); //State to hold search results
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -60,7 +60,17 @@ export default function Home() {
         </div>
       )}
       <ScrollArea className="h-[200px] w-[350px] rounded-md border p-4">
-        {results && <p className="text-white">{results}</p>}
+        {results.length > 0 ? (
+          results.map((url, index) => (
+            <p key={index}>
+              <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                {url}
+              </a>
+            </p>
+          ))
+        ) : (
+          <p className="text-white">No results found</p>
+        )}
       </ScrollArea>
       <style jsx>{`
         .loader {

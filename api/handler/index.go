@@ -85,13 +85,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	indx := lib.MakeDBIndex(db, sessionID)
 	fmt.Println(req.Website)
 	lib.Crawl(req.Website, indx)
-	fmt.Println("here")
 
-	res := lib.Indexes.Search(indx, "simple")
-	response := fmt.Sprintf("%v", res)
-	fmt.Printf("%v", response)
+	res := lib.Indexes.Search(indx, "school")
+	var urls []string
+	for _, result := range res {
+		urls = append(urls, result.URL)
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(urls)
 }
 
 func deleteExpiredSessions(db *sql.DB) {
