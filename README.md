@@ -33,7 +33,7 @@
 
 ## Running SiteSearch
 
-Currently the front-end of SiteSearch is still under development, but you can view th progress at
+Currently the front-end of SiteSearch is still under development, but you can view the progress at
 https://sitesearch.vercel.app/
 
 Last Updated: **10.29.2024**
