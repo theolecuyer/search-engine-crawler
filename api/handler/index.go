@@ -89,6 +89,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	res := lib.Indexes.Search(indx, "simple")
 	response := fmt.Sprintf("%v", res)
+	fmt.Printf("%v", response)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
