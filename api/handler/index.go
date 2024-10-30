@@ -86,7 +86,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(req.Website)
 	lib.Crawl(req.Website, indx)
 
-	res := lib.Indexes.Search(indx, "school")
+	res := lib.Indexes.Search(indx, "simple")
 	var urls []string
 	for _, result := range res {
 		urls = append(urls, result.URL)
