@@ -9,7 +9,7 @@ export default function Home() {
   //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
   const [results, setResults] = useState([]); //State to hold search results
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"; // or any default URL for testing
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -20,14 +20,14 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ website: website }), // Pass the query as website
+        body: JSON.stringify({ website: website }), //Pass the query as website
       });
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setResults(data.results);
+      setResults(data);
     } catch (error) {
       console.error("Error calling API:", error);
     } finally {
