@@ -9,11 +9,11 @@ export default function Home() {
   //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
   const [results, setResults] = useState([]); //State to hold search results
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL!; //Api url to access the custom go API on AWS ES2
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"; // or any default URL for testing
 
   const handleSearch = async () => {
     setIsLoading(true);
-    console.log("API URL:", apiUrl);
+    console.log("handleSearch called");
     try {
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -27,7 +27,7 @@ export default function Home() {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setResults(data);
+      setResults(data.results);
     } catch (error) {
       console.error("Error calling API:", error);
     } finally {
