@@ -9,11 +9,13 @@ export default function Home() {
   //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
   const [results, setResults] = useState([]); //State to hold search results
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL!; //Api url to access the custom go API on AWS ES2
+
   const handleSearch = async () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/handler`, {
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
