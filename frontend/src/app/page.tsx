@@ -13,7 +13,7 @@ export default function Home() {
 
   const handleSearch = async () => {
     setIsLoading(true);
-
+    console.log("API URL:", apiUrl);
     try {
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -26,7 +26,6 @@ export default function Home() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
       const data = await response.json();
       setResults(data);
     } catch (error) {
