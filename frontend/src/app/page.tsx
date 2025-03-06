@@ -2,32 +2,30 @@
 
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import axios from "axios"
+import https from "https";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false); //State for loading status
   const [website, setWebsite] = useState(""); //To store the website being crawled
-  //const [searchQuery, setSearchQuery] = useState(""); //To store the user query (Not yet implmented)
   const [results, setResults] = useState([]); //State to hold search results
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  });
 
   const handleSearch = async () => {
     setIsLoading(true);
     console.log("handleSearch called");
     try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ website: website }), //Pass the query as website
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setResults(data);
+      const response = await axios.post(
+        apiUrl,
+        { website: website },
+        { httpsAgent: agent }
+      );
+      setResults(response.data);
     } catch (error) {
       console.error("Error calling API:", error);
     } finally {
@@ -64,7 +62,12 @@ export default function Home() {
         {results.length > 0 ? (
           results.map((url, index) => (
             <p key={index}>
-              <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 underline"
+              >
                 {url}
               </a>
             </p>
