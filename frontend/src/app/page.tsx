@@ -25,9 +25,11 @@ export default function Home() {
         { search_term: searchTerm },
         { httpsAgent: agent }
       );
-      setResults(response.data);
+      const data = response.data || [];
+      setResults(data);
     } catch (error) {
       console.error("Error calling API:", error);
+      setResults([]);
     } finally {
       setIsLoading(false);
     }
