@@ -7,7 +7,7 @@ import https from "https";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false); //State for loading status
-  const [website, setWebsite] = useState(""); //To store the website being crawled
+  const [searchTerm, setsearchTerm] = useState(""); //To store the searchTerm being searched
   const [results, setResults] = useState([]); //State to hold search results
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -22,7 +22,7 @@ export default function Home() {
     try {
       const response = await axios.post(
         apiUrl,
-        { website: website },
+        { search_term: searchTerm },
         { httpsAgent: agent }
       );
       setResults(response.data);
@@ -42,8 +42,8 @@ export default function Home() {
             type="text"
             className="border border-gray-300 rounded-md p-2 w-64 text-black"
             placeholder="Search..."
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setsearchTerm(e.target.value)}
           />
           <button
             className="bg-blue-500 text-white rounded px-4 h-full transition duration-300 hover:bg-blue-600"
@@ -55,7 +55,7 @@ export default function Home() {
       ) : (
         <div className="flex items-center">
           <div className="loader"></div>
-          <span className="text-white ml-2">Crawling {website}...</span>
+          <span className="text-white ml-2">Searching {searchTerm}...</span>
         </div>
       )}
       <ScrollArea className="h-[200px] w-[350px] rounded-md border p-4">
