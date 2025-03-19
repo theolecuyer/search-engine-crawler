@@ -12,10 +12,6 @@ export default function Home() {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-  const agent = new https.Agent({
-    rejectUnauthorized: false,
-  });
-
   const handleSearch = async () => {
     setIsLoading(true);
     console.log("handleSearch called");
@@ -23,7 +19,9 @@ export default function Home() {
       const response = await axios.post(
         apiUrl,
         { search_term: searchTerm },
-        { httpsAgent: agent }
+        {headers: {
+          "API-KEY": process.env.API_KEY
+        }}
       );
       const data = response.data || [];
       setResults(data);
