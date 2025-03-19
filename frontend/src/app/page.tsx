@@ -10,17 +10,17 @@ export default function Home() {
   const [results, setResults] = useState([]); //State to hold search results
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
+  const apiKey = process.env.GO_API_KEY || "";
   const handleSearch = async () => {
     setIsLoading(true);
     console.log("handleSearch called");
-    console.log("API_KEY from env:", process.env.API_KEY);
+    console.log("API_KEY from env:", apiKey);
     try {
       const response = await axios.post(
         apiUrl,
         { search_term: searchTerm },
         {headers: {
-          "API-KEY": process.env.API_KEY
+          "API-KEY": apiKey
         }}
       );
       const data = response.data || [];
