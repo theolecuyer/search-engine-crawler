@@ -44,7 +44,7 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="flex flex-col items-center mb-8">
             <Image 
-              src="https://upload.wikimedia.org/wikipedia/en/c/cd/University_of_San_Francisco_logo.png" 
+              src="/USFlogo.png"
               alt="USF Logo" 
               width={100} 
               height={100}
@@ -83,7 +83,7 @@ export default function Home() {
           <div className="flex items-center p-4 bg-[#00543C] border-b border-[#006b4f]">
             <div className="flex items-center mr-8">
               <Image 
-                src="https://upload.wikimedia.org/wikipedia/en/c/cd/University_of_San_Francisco_logo.png" 
+                src="/USFlogo.png"
                 alt="USF Logo" 
                 width={40} 
                 height={40}
