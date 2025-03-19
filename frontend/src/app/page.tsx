@@ -15,7 +15,6 @@ export default function Home() {
   const apiKey = process.env.NEXT_PUBLIC_GO_API_KEY || ""
   const handleSearch = async () => {
     setIsLoading(true)
-    setHasSearched(true)
     console.log("handleSearch called")
     try {
       const response = await axios.post(
@@ -34,55 +33,63 @@ export default function Home() {
       setResults([])
     } finally {
       setIsLoading(false)
+      setHasSearched(true)
     }
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1a1a1a]">
       {!hasSearched ? (
-        // Initial centered layout before search
+        //layout before search
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="flex flex-col items-center mb-8">
-            <Image
-              src="/USFlogo.png"
-              alt="USF Logo"
-              width={100}
+            <Image 
+              src="https://upload.wikimedia.org/wikipedia/en/c/cd/University_of_San_Francisco_logo.png" 
+              alt="USF Logo" 
+              width={100} 
               height={100}
               className="mb-4"
             />
-            <h1 className="text-4xl font-bold text-white">USF Web Search</h1>
+            <h1 className="text-4xl font-bold text-white">USF Course Catalog Search</h1>
           </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              className="border border-gray-700 bg-[#222222] rounded-md p-2 w-64 text-white"
-              placeholder="Search courses..."
-              value={searchTerm}
-              onChange={(e) => setsearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <button
-              className="bg-[#1e4d3b] text-white rounded px-4 py-2 flex items-center transition duration-300 hover:bg-[#2a6d54]"
-              onClick={handleSearch}
-            >
-              Search
-            </button>
-          </div>
+          {!isLoading ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="border border-gray-700 bg-[#222222] rounded-md p-2 w-64 text-white"
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setsearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <button
+                className="bg-[#00543C] text-white rounded px-4 py-2 flex items-center transition duration-300 hover:bg-[#006b4f]"
+                onClick={handleSearch}
+              >
+                Search
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center mt-4">
+              <div className="loader"></div>
+              <span className="text-white ml-2">Searching {searchTerm}...</span>
+            </div>
+          )}
         </div>
       ) : (
-        // Layout after search is performed
+        //Layout after search is done
         <div className="flex flex-col w-full">
           {/* Header with logo and search bar */}
-          <div className="flex items-center p-4 bg-[#00543C] border-b border-[#2a6d54]">
+          <div className="flex items-center p-4 bg-[#00543C] border-b border-[#006b4f]">
             <div className="flex items-center mr-8">
-              <Image
-                src="/USFlogo.png"
-                alt="USF Logo"
-                width={40}
+              <Image 
+                src="https://upload.wikimedia.org/wikipedia/en/c/cd/University_of_San_Francisco_logo.png" 
+                alt="USF Logo" 
+                width={40} 
                 height={40}
                 className="mr-3"
               />
-              <h1 className="text-xl font-bold text-white whitespace-nowrap">USF Web Search</h1>
+              <h1 className="text-xl font-bold text-white whitespace-nowrap">USF Course Catalog</h1>
             </div>
             {!isLoading ? (
               <div className="flex gap-2 flex-1 max-w-md">
@@ -156,4 +163,3 @@ export default function Home() {
     </div>
   )
 }
-
