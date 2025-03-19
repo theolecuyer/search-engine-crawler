@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios"
-import https from "https";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false); //State for loading status
