@@ -1,84 +1,143 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import axios from "axios"
+import Image from "next/image"
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false); //State for loading status
-  const [searchTerm, setsearchTerm] = useState(""); //To store the searchTerm being searched
-  const [results, setResults] = useState([]); //State to hold search results
+  const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setsearchTerm] = useState("")
+  const [results, setResults] = useState([])
+  const [hasSearched, setHasSearched] = useState(false)
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  const apiKey = process.env.NEXT_PUBLIC_GO_API_KEY || "";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+  const apiKey = process.env.NEXT_PUBLIC_GO_API_KEY || ""
   const handleSearch = async () => {
-    setIsLoading(true);
-    console.log("handleSearch called");
+    setIsLoading(true)
+    setHasSearched(true)
+    console.log("handleSearch called")
     try {
       const response = await axios.post(
         apiUrl,
         { search_term: searchTerm },
-        {headers: {
-          "Authorization": apiKey
-        }}
-      );
-      const data = response.data || [];
-      setResults(data);
+        {
+          headers: {
+            Authorization: apiKey,
+          },
+        },
+      )
+      const data = response.data || []
+      setResults(data)
     } catch (error) {
-      console.error("Error calling API:", error);
-      setResults([]);
+      console.error("Error calling API:", error)
+      setResults([])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-      <h1 className="text-4xl font-bold text-white mb-4">SiteSearch</h1>
-      {!isLoading ? (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            className="border border-gray-300 rounded-md p-2 w-64 text-black"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setsearchTerm(e.target.value)}
-          />
-          <button
-            className="bg-blue-500 text-white rounded px-4 h-full transition duration-300 hover:bg-blue-600"
-            onClick={handleSearch}
-          >
-            Search
-          </button>
+    <div className="flex flex-col min-h-screen bg-[#1a1a1a]">
+      {!hasSearched ? (
+        // Initial centered layout before search
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center mb-8">
+            <Image
+              src="/USFlogo.png"
+              alt="USF Logo"
+              width={100}
+              height={100}
+              className="mb-4"
+            />
+            <h1 className="text-4xl font-bold text-white">USF Web Search</h1>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              className="border border-gray-700 bg-[#222222] rounded-md p-2 w-64 text-white"
+              placeholder="Search courses..."
+              value={searchTerm}
+              onChange={(e) => setsearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+            <button
+              className="bg-[#1e4d3b] text-white rounded px-4 py-2 flex items-center transition duration-300 hover:bg-[#2a6d54]"
+              onClick={handleSearch}
+            >
+              Search
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="flex items-center">
-          <div className="loader"></div>
-          <span className="text-white ml-2">Searching {searchTerm}...</span>
+        // Layout after search is performed
+        <div className="flex flex-col w-full">
+          {/* Header with logo and search bar */}
+          <div className="flex items-center p-4 bg-[#00543C] border-b border-[#2a6d54]">
+            <div className="flex items-center mr-8">
+              <Image
+                src="/USFlogo.png"
+                alt="USF Logo"
+                width={40}
+                height={40}
+                className="mr-3"
+              />
+              <h1 className="text-xl font-bold text-white whitespace-nowrap">USF Web Search</h1>
+            </div>
+            {!isLoading ? (
+              <div className="flex gap-2 flex-1 max-w-md">
+                <input
+                  type="text"
+                  className="border border-gray-700 bg-[#222222] rounded-md p-2 flex-1 text-white"
+                  placeholder="Search courses..."
+                  value={searchTerm}
+                  onChange={(e) => setsearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                />
+                <button
+                  className="bg-[#1a1a1a] text-white rounded px-4 py-2 flex items-center transition duration-300 hover:bg-[#333333]"
+                  onClick={handleSearch}
+                >
+                  Search
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <div className="loader"></div>
+                <span className="text-white ml-2">Searching {searchTerm}...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Results area - full width, no border */}
+          <div className="flex-1">
+            <ScrollArea className="h-[calc(100vh-80px)] w-full">
+              <div className="p-4 max-w-5xl mx-auto">
+                {results.length > 0 ? (
+                  results.map((url, index) => (
+                    <p key={index} className="py-2">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#e6b800] hover:text-[#ffcc00] underline"
+                      >
+                        {url}
+                      </a>
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-white">No results found</p>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
       )}
-      <ScrollArea className="h-[200px] w-[350px] rounded-md border p-4">
-        {results.length > 0 ? (
-          results.map((url, index) => (
-            <p key={index}>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                {url}
-              </a>
-            </p>
-          ))
-        ) : (
-          <p className="text-white">No results found</p>
-        )}
-      </ScrollArea>
       <style jsx>{`
         .loader {
           border: 4px solid rgba(255, 255, 255, 0.3);
-          border-top: 4px solid #fff;
+          border-top: 4px solid #e6b800;
           border-radius: 50%;
           width: 20px;
           height: 20px;
@@ -95,5 +154,6 @@ export default function Home() {
         }
       `}</style>
     </div>
-  );
+  )
 }
+
