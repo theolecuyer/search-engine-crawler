@@ -14,6 +14,7 @@ export default function Home() {
   const handleSearch = async () => {
     setIsLoading(true);
     console.log("handleSearch called");
+    console.log("API_KEY from env:", process.env.API_KEY);
     try {
       const response = await axios.post(
         apiUrl,
