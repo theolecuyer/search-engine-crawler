@@ -50,7 +50,7 @@ export default function Home() {
               height={100}
               className="mb-4"
             />
-            <h1 className="text-4xl font-bold text-white">USF Course Catalog Search</h1>
+            <h1 className="text-4xl font-bold text-white">USF Crawled Web Search</h1>
           </div>
           {!isLoading ? (
             <div className="flex gap-2">
@@ -89,7 +89,7 @@ export default function Home() {
                 height={40}
                 className="mr-3"
               />
-              <h1 className="text-xl font-bold text-white whitespace-nowrap">USF Course Catalog</h1>
+              <h1 className="text-xl font-bold text-white whitespace-nowrap">USF Crawled Web Search</h1>
             </div>
             {!isLoading ? (
               <div className="flex gap-2 flex-1 max-w-md">
